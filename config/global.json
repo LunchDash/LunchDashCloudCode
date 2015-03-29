@@ -1,0 +1,14 @@
+{
+  "global": {
+    "parseVersion": "1.4.0"
+  },
+  "applications": {
+    "_default": {
+      "link": "lunchdash"
+    },
+    "lunchdash": {
+      "applicationId": "scdBFiBhXpbSgYm6ii3GyOTZhzW1z3OkplDeqhLD",
+      "masterKey": "VjRiYJs8FfX3zSoRx2sUXQseMOBKYABzUAWv43be"
+    }
+  }
+}
