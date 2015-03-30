@@ -17,7 +17,9 @@ Parse.Cloud.define("pushNotfication", function(request, response) {
         data: {
             title: "Lunch Dash Has a new Match",
             alert: "New resturant Match",
-            expiration_interval: 300
+            expiration_interval: 300,
+            userid:request.params.userid,
+
         }
     }, {
         success: function() {
@@ -27,5 +29,44 @@ Parse.Cloud.define("pushNotfication", function(request, response) {
             response.error(error);
         }
     });
+});
+
+Parse.Cloud.define("userGetInfo", function(request, response) {
+    var userId = request.params.userid;
+    if( userId ){
+        var query = new Parse.Query("UserTable");
+        query.equalTo('userId', userId);
+        query.limit(1);
+        query.find({
+            success: function(results) {
+                response.success(results[0]);
+            },
+            error: function() {
+                response.error("Could not find user");
+            }
+        });
+    } else {
+        response.error("Could not find user");
+    }
+});
+
+
+Parse.Cloud.define("triggerMatchPushNotify", function(request, response) {
+    var query = new Parse.Query("UserTable");
+    query.find({
+        success: function(results) {
+            for (var i = 0; i < results.length; i++) {
+                var object = results[i];
+
+
+            }
+            response.success(results);
+        },
+        error: function() {
+            response.error("Match push failed.");
+        }
+    });
+
+
 });
 
