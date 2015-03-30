@@ -56,11 +56,32 @@ Parse.Cloud.define("triggerMatchPushNotify", function(request, response) {
     query.find({
         success: function(results) {
             for (var i = 0; i < results.length; i++) {
-                var object = results[i];
+                var user = results[i];
+                var userid = user.get('userId');
+                //console.log(userid);
+                var queryMatchreq = new Parse.Query("UserRestaurantMatchesTable");
+                queryMatchreq.equalTo('reqUserId', userid);
+                queryMatchreq.equalTo('reqStatus', 'waiting');
 
+                var queryMatchmatch = new Parse.Query("UserRestaurantMatchesTable");
+                queryMatchmatch.equalTo('matchedUserID', userid);
+                queryMatchmatch.equalTo('matchedStatus', 'waiting');
+                var mainQuery = Parse.Query.or(queryMatchreq, queryMatchmatch);
+                mainQuery.find({
+                    success: function(results2) {
+                        console.log("got a result");
+
+                        //response.success(results2);
+                        return;
+                    },
+                    error: function(error) {
+                        response.error(error);
+                        return;
+                    }
+                });
 
             }
-            response.success(results);
+            response.success();
         },
         error: function() {
             response.error("Match push failed.");
