@@ -1,34 +1,8 @@
 
-// Use Parse.Cloud.define to define as many cloud functions as you want.
-// For example:
-Parse.Cloud.define("hello", function(request, response) {
-  response.success("Hello world!");
-});
-
-
-
 Parse.Cloud.define("pushNotfication", function(request, response) {
-
-    var query = new Parse.Query(Parse.Installation);
-    query.equalTo('userid', request.params.userid);
-
-    Parse.Push.send({
-        where: query, // Set our Installation query
-        data: {
-            title: "Lunch Dash Has a new Match",
-            alert: "New resturant Match",
-            expiration_interval: 300,
-            userid:request.params.userid,
-
-        }
-    }, {
-        success: function() {
-            response.success();
-        },
-        error: function(error) {
-            response.error(error);
-        }
-    });
+    var userid = request.params.userid;
+    sendPushNotificaiton(userid, '');
+    response.success();
 });
 
 Parse.Cloud.define("userGetInfo", function(request, response) {
@@ -51,43 +25,80 @@ Parse.Cloud.define("userGetInfo", function(request, response) {
 });
 
 
+
 Parse.Cloud.define("triggerMatchPushNotify", function(request, response) {
+
     var query = new Parse.Query("UserTable");
     query.find({
         success: function(results) {
+
+            var userlist = new Array();
+
             for (var i = 0; i < results.length; i++) {
-                var user = results[i];
-                var userid = user.get('userId');
-                //console.log(userid);
-                var queryMatchreq = new Parse.Query("UserRestaurantMatchesTable");
-                queryMatchreq.equalTo('reqUserId', userid);
-                queryMatchreq.equalTo('reqStatus', 'waiting');
+                var userid = results[i].get('userId');
 
-                var queryMatchmatch = new Parse.Query("UserRestaurantMatchesTable");
-                queryMatchmatch.equalTo('matchedUserID', userid);
-                queryMatchmatch.equalTo('matchedStatus', 'waiting');
-                var mainQuery = Parse.Query.or(queryMatchreq, queryMatchmatch);
-                mainQuery.find({
-                    success: function(results2) {
-                        console.log("got a result");
+                var queryreq = new Parse.Query("UserRestaurantMatchesTable")
+                    .equalTo('reqUserId', userid)
+                    .equalTo('reqStatus', 'waiting')
+                    .equalTo('matchedStatus', 'waiting');
+                var querymatch = new Parse.Query("UserRestaurantMatchesTable")
+                    .equalTo('matcherUserId', userid)
+                    .equalTo('matchedStatus', 'waiting')
+                    .equalTo('reqStatus', 'waiting');
 
-                        //response.success(results2);
-                        return;
+                Parse.Query.or(queryreq,querymatch).find({
+                    success: function(matches) {
+                        if(matches.length > 0){
+                            for(var matchKey in matches){
+                                var match = matches[matchKey];
+                                if((userlist.indexOf(match.get('reqUserId')) == -1)
+                                    && (userlist.indexOf(match.get('matchedUserID')) == -1)) {
+                                    //console.log(match.get('reqUserId'));
+                                    //console.log(match.get('matchedUserID'));
+                                    userlist.push(match.get('reqUserId'));
+                                    userlist.push(match.get('matchedUserID'));
+
+                                    sendPushNotificaiton(match.get('reqUserId'), match.get('objectId'));
+                                    sendPushNotificaiton(match.get('matchedUserID'), match.get('objectId'));
+                                }
+                            }
+                        }
                     },
-                    error: function(error) {
-                        response.error(error);
-                        return;
+                    error: function() {
+                        response.error("Could not find user");
                     }
                 });
-
             }
-            response.success();
         },
         error: function() {
             response.error("Match push failed.");
         }
     });
-
-
 });
+
+
+function sendPushNotificaiton(userid, matchid){
+    var query = new Parse.Query(Parse.Installation);
+    query.equalTo('userid', userid);
+
+    Parse.Push.send({
+        where: query, // Set our Installation query
+        data: {
+            title: "Lunch Dash Has a new Match",
+            alert: "New resturant Match",
+            expiration_interval: 30,
+            userid:userid,
+            matchid:matchid
+        }
+    }, {
+        success: function() {
+            //console.log("Push Sent ");
+        },
+        error: function(error) {
+            //console.log("Push error ");
+        }
+    });
+
+}
+
 
