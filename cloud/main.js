@@ -58,8 +58,8 @@ Parse.Cloud.define("triggerMatchPushNotify", function(request, response) {
                                     userlist.push(match.get('reqUserId'));
                                     userlist.push(match.get('matchedUserID'));
 
-                                    sendPushNotificaiton(match.get('reqUserId'), match.get('objectId'));
-                                    sendPushNotificaiton(match.get('matchedUserID'), match.get('objectId'));
+                                    sendPushNotificaiton(match.get('reqUserId'), match.id);
+                                    sendPushNotificaiton(match.get('matchedUserID'), match.id);
                                 }
                             }
                         }
@@ -84,18 +84,17 @@ function sendPushNotificaiton(userid, matchid){
     Parse.Push.send({
         where: query, // Set our Installation query
         data: {
-            title: "Lunch Dash Has a new Match",
-            alert: "New resturant Match",
-            expiration_interval: 30,
+            title: "New Match",
+            alert: "You have a new Match",
             userid:userid,
             matchid:matchid
         }
     }, {
         success: function() {
-            //console.log("Push Sent ");
+            console.log("Push Sent ");
         },
         error: function(error) {
-            //console.log("Push error ");
+            console.log("Push error ");
         }
     });
 
