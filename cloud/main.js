@@ -58,8 +58,8 @@ Parse.Cloud.define("triggerMatchPushNotify", function(request, response) {
                                     userlist.push(match.get('reqUserId'));
                                     userlist.push(match.get('matchedUserID'));
 
-                                    sendPushNotificaiton(match.get('reqUserId'), match.id);
-                                    sendPushNotificaiton(match.get('matchedUserID'), match.id);
+                                    sendPushNotificaiton(match.get('reqUserId'), match.id, 1);
+                                    sendPushNotificaiton(match.get('matchedUserID'), match.id, 1);
                                 }
                             }
                         }
@@ -77,17 +77,25 @@ Parse.Cloud.define("triggerMatchPushNotify", function(request, response) {
 });
 
 
-function sendPushNotificaiton(userid, matchid){
+function sendPushNotificaiton(userid, matchid, action){
     var query = new Parse.Query(Parse.Installation);
     query.equalTo('userid', userid);
+    var title = "New Match";
+    var alert = "You have a new Match";
+    if(action == 2){
+        title = "Lunch fixed";
+        alert = "Get in touch with them";
+    }
+
 
     Parse.Push.send({
         where: query, // Set our Installation query
         data: {
-            title: "New Match",
-            alert: "You have a new Match",
+            title: title,
+            alert: alert,
             userid:userid,
-            matchid:matchid
+            matchid:matchid,
+            action:action
         }
     }, {
         success: function() {
