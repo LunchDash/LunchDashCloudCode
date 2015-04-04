@@ -26,7 +26,7 @@ Parse.Cloud.define("userGetInfo", function(request, response) {
 
 
 
-Parse.Cloud.define("triggerMatchPushNotify", function(request, response) {
+Parse.Cloud.job("triggerMatchPushNotify", function(request, response) {
 
     var query = new Parse.Query("UserTable");
     query.find({
@@ -99,7 +99,7 @@ function sendPushNotificaiton(userid, matchid, action){
         }
     }, {
         success: function() {
-            console.log("Push Sent ");
+            //console.log("Push Sent ");
         },
         error: function(error) {
             console.log("Push error ");
