@@ -25,10 +25,39 @@ Parse.Cloud.define("userGetInfo", function(request, response) {
 });
 
 
+Parse.Cloud.job("triggerChatPushNotify", function(request, response){
+    var query = new Parse.Query("UserRestaurantMatchesTable");
+    query.equalTo('reqStatus',"accepted");
+    query.equalTo('matchedStatus',"accepted");
+    query.find({
+        success: function(matches){
+            if(matches.length > 0) {
+                for(var matchKey in matches){
+                    var match = matches[matchKey];
+                    //console.log(match);
+                    sendPushNotificaiton(match.get('reqUserId'), match.id, 2);
+                    setUserToMatched(match.get('reqUserId'),match.id, match.get('matchedUserID'));
+                    sendPushNotificaiton(match.get('matchedUserID'), match.id, 2);
+                    setUserToMatched(match.get('matchedUserID'),match.id, match.get('reqUserId'));
+
+                }
+            } else {
+                response.success("No Chat matches yet");
+            }
+
+        },
+        error: function(){
+            response.error("Chat Push Failed.");
+        }
+    })
+});
+
+
 
 Parse.Cloud.job("triggerMatchPushNotify", function(request, response) {
 
     var query = new Parse.Query("UserTable");
+    query.equalTo('status', "Waiting");
     query.find({
         success: function(results) {
 
@@ -80,11 +109,11 @@ Parse.Cloud.job("triggerMatchPushNotify", function(request, response) {
 function sendPushNotificaiton(userid, matchid, action){
     var query = new Parse.Query(Parse.Installation);
     query.equalTo('userid', userid);
-    var title = "New Match";
-    var alert = "You have a new Match";
+    var title = "We've found a potential match!";
+    var alert = "Have lunch with ______ at ______?";
     if(action == 2){
-        title = "Lunch fixed";
-        alert = "Get in touch with them";
+        title = "We've matched you up!";
+        alert = "Get in touch with ________ and have a great lunch at _______!";
     }
 
 
@@ -108,4 +137,15 @@ function sendPushNotificaiton(userid, matchid, action){
 
 }
 
-
+function setUserToMatched(userid, match, matchedUserid)
+{
+    var query = new Parse.Query("UserTable");
+    query.equalTo('userId', userid);
+    query.first().then(function(user)
+    {
+        user.set("status", "Matched");
+        user.set("machedId", match);
+        user.set("machedUserId", matchedUserid);
+        user.save();
+    });
+}
