@@ -35,8 +35,14 @@ Parse.Cloud.job("triggerChatPushNotify", function(request, response){
                 for(var matchKey in matches){
                     var match = matches[matchKey];
                     //console.log(match);
-                    sendPushNotificaiton(match.get('reqUserId'), match.id, 2, match.get('matchedUsername'), match.get('restaurantName') );
-                    sendPushNotificaiton(match.get('matchedUserID'), match.id, 2, match.get('matchedUsername'), match.get('restaurantName') );
+                    var reqUserId = match.get('reqUserId');
+                    var matchedUserId = match.get('matchedUserID');
+                    sendPushNotificaiton(reqUserId, match.id, 2, match.get('matchedUsername'), match.get('restaurantName') );
+                    sendPushNotificaiton(matchedUserId, match.id, 2, match.get('matchedUsername'), match.get('restaurantName') );
+
+                    //Remove both users from the URTable.  This will prevent further matches from being made from them.
+                    clearUser(reqUserId);
+                    clearUser(matchedUserId);
                 }
             } else {
                 response.success("No Chat matches yet");
@@ -161,5 +167,20 @@ function setUserToMatched(userid, match, matchedUserid)
         user.set("matchedId", match);
         user.set("matchedUserId", matchedUserid);
         user.save();
+    });
+}
+
+function clearUser(userId){ //Call this after ChatPushNotifs have been sent out.
+     
+    //Remove all their entries from UserRestaurantsTable
+    var query = new Parse.Query("UserRestaurantsTable");
+    query.equalTo('userId',userId);    
+    query.find({
+        success: function(matches){
+            Parse.Object.destroyAll(matches);
+        },
+        error: function(){
+            response.error("UserRestaurantsTable Cleanup Failed");
+        }
     });
 }
