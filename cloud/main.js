@@ -71,7 +71,7 @@ function triggerMatchPushNotify(request,response){
                                 userlist.push(match.get('matchedUserID'));
 
                                 sendPushNotificaiton(match.get('reqUserId'), match.id, 1, match.get('matchedUsername'), match.get('restaurantName') );
-                                sendPushNotificaiton(match.get('matchedUserID'), match.id, 1, match.get('matchedUsername'), match.get('restaurantName') );
+                                sendPushNotificaiton(match.get('matchedUserID'), match.id, 1, match.get('reqUserName'), match.get('restaurantName') );
                             }
                         }
                     }
@@ -108,7 +108,7 @@ function triggerChatPushNotify(request,response){
                             var status = results[0].get("status");
                             if(status != "Matched"){
                                 sendPushNotificaiton(reqUserId, match.id, 2, match.get('matchedUsername'), match.get('restaurantName'));
-                                sendPushNotificaiton(matchedUserId, match.id, 2, match.get('matchedUsername'), match.get('restaurantName'));
+                                sendPushNotificaiton(matchedUserId, match.id, 2, match.get('reqUserName'), match.get('restaurantName'));
 
                     //Remove both users from the URTable.  This will prevent further matches from being made from them.
                     clearUser(reqUserId);
